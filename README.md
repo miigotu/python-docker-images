@@ -36,13 +36,13 @@
 ## Example multistage build image
 
 ```Dockerfile
-FROM naylscloud/python:3.9-slim-poetry-cargo-sdk as dependency-image
+FROM --platform=$TARGETPLATFORM miigotu/python:3.9-slim-poetry-cargo-sdk as dependency-image
 
 COPY poetry.lock pyproject.toml ./
 RUN poetry install --no-interaction --no-dev --no-root --no-ansi -vvv
 
 
-FROM naylscloud/python:3.9-slim as runtime-image
+FROM --platform=$TARGETPLATFORM miigotu/python:3.9-slim as runtime-image
 
 WORKDIR /app
 
