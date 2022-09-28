@@ -16,12 +16,9 @@ RUN echo "Targeting: $TARGETPLATFORM"
 ENV CARGO_PATH=/root/.cargo
 ENV RUSTUP_HOME=/root/.rustup
 
-ENV RUSTUP_PERMIT_COPY_RENAME=1
-
 ENV PATH="$CARGO_PATH/bin:$PATH"
 
-RUN apt-get update && \
- curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain none -y && \
- rustup toolchain install nightly --allow-downgrade --profile complete &&\
- pip install --upgrade setuptools-rust &&\
- apt-get clean && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
+RUN apt-get update && apt install python3-apt
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+ pip install --upgrade setuptools-rust
