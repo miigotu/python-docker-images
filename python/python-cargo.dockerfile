@@ -18,7 +18,7 @@ ENV RUSTUP_HOME=/root/.rustup
 
 ENV PATH="$CARGO_PATH/bin:$PATH"
 
-RUN apt-get update && apt install python3-apt
+RUN apt-get update && apt install python3-apt -yq
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
  pip install --upgrade setuptools-rust
