@@ -14,7 +14,7 @@ RUN echo "Targeting: $TARGETPLATFORM"
 
 # Install cargo and rust toolchain
 ENV CARGO_PATH=/root/.cargo
-ENV RUSTUP_HOME/root/.rustup
+ENV RUSTUP_HOME=/root/.rustup
 
 ENV PATH="$CARGO_PATH/bin:$PATH"
 
