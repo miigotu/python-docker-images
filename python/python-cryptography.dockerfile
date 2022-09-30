@@ -15,7 +15,7 @@ ARG BUILDPLATFORM
 RUN echo "Host: $BUILDPLATFORM"
 RUN echo "Targeting: $TARGETPLATFORM"
 
-RUN apt-get update && apt-get install -y build-essential libffi-dev libssl-dev rustc zlib1g-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y build-essential libffi-dev libssl-dev rust-all cargo zlib1g-dev && rm -rf /var/lib/apt/lists/*
 
 ENV CARGO_HOME=/root/.cargo
 ENV RUSTUP_HOME=/root/.rustup
@@ -35,7 +35,7 @@ ENV CARGO_HOME=/root/.cargo
 ENV RUSTUP_HOME=/root/.rustup
 
 
-RUN apt-get update && apt-get install -y build-essential libffi-dev libssl-dev rustc zlib1g-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y build-essential libffi-dev libssl-dev rust-all cargo zlib1g-dev && rm -rf /var/lib/apt/lists/*
 
 COPY --from=prebuilder $CARGO_HOME $CARGO_HOME
 COPY --from=prebuilder $RUSTUP_HOME $RUSTUP_HOME
