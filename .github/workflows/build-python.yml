@@ -19,157 +19,142 @@ env:
 jobs:
   python:
     strategy:
-      # max-parallel: 2
+      max-parallel: 1
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-rc"]
         slim: ["-slim", ""]
-    continue-on-error: ${{ matrix.python-version != 3.10 || !contains(matrix.slim, 'slim') }}
-    runs-on: ubuntu-latest
+    continue-on-error: true
+#    continue-on-error: ${{ matrix.python-version != 3.10 || !contains(matrix.slim, 'slim') }}
+    runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-#      - name: Login to DockerHub
-#        if: github.actor == 'miigotu'
-#        uses: docker/login-action@v2
-#        with:
-#          username: miigotu
-#          password: ${{ secrets.DOCKER_PASSWORD }}
-#      - name: Login to GitHub Container Registry
-#        if: github.actor == 'miigotu'
-#        uses: docker/login-action@v2
-#        with:
-#          registry: ghcr.io
-#          username: miigotu
-#          password: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          buildkitd-flags: --debug
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 1
+      - name: Login to DockerHub
+        if: github.actor == 'miigotu'
+        uses: docker/login-action@v2
+        with:
+          username: miigotu
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to GitHub Container Registry
+        if: github.actor == 'miigotu'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: miigotu
+          password: ${{ secrets.GITHUB_TOKEN }}
       # ======================================================================================================================== #
-      - name: Build python-cryptography using python${{ matrix.python-version }}${{ matrix.slim }}
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}
         uses: docker/build-push-action@v3
         with:
-          file: python/python-cryptography.dockerfile
+          file: python/python.dockerfile
           platforms: ${{ env.TARGET_PLATFORMS }}
-          push: false
-          target: export-wheels
+          push: ${{ env.PUSH }}
           tags: |
-            python${{ matrix.python-version }}${{ matrix.slim }}-cryptography
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}
           build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-          outputs: type=local,dest=/tmp/cryptography-wheels
-          # outputs: type=docker,dest=/tmp/python${{ matrix.python-version }}${{ matrix.slim }}-cryptography.tar
-      - name: List wheels directory
-        run: |
-          ls -R /tmp/cryptography-wheels
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-cargo
+        uses: docker/build-push-action@v3
         with:
-          name: ${{ matrix.python-version }}${{ matrix.slim }}-cryptography
-          path: /tmp/cryptography-wheels
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-cargo
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-cargo.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-cargo
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk
-#        continue-on-error: true
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-cargo-sdk.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-cargo-sdk-cryptography.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-poetry.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-poetry-cargo.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-poetry-cargo-sdk.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-poetry-sdk.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk.tar
-#      # ======================================================================================================================== #
-#      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-sdk
-#        uses: docker/build-push-action@v3
-#        with:
-#          file: python/python-sdk.dockerfile
-#          platforms: ${{ env.TARGET_PLATFORMS }}
-#          push: ${{ env.PUSH }}
-#          tags: |
-#            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-sdk
-#            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-sdk
-#          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
-#          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-sdk.tar
+          file: python/python-cargo.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-cargo
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk
+        continue-on-error: true
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-cargo-sdk.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-cargo-sdk-cryptography.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-cargo-sdk-cryptography.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-poetry.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-poetry-cargo.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-poetry-cargo-sdk.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-cargo-sdk.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-poetry-sdk.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-poetry-sdk.tar
+      # ======================================================================================================================== #
+      - name: Build python:${{ matrix.python-version }}${{ matrix.slim }}-sdk
+        uses: docker/build-push-action@v3
+        with:
+          file: python/python-sdk.dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ env.PUSH }}
+          tags: |
+            miigotu/python:${{ matrix.python-version }}${{ matrix.slim }}-sdk
+            ghcr.io/miigotu/python-docker-images:${{ matrix.python-version }}${{ matrix.slim }}-sdk
+          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+          # outputs: type=docker,dest=/tmp/python:${{ matrix.python-version }}${{ matrix.slim }}-sdk.tar
