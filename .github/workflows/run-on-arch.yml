@@ -59,7 +59,6 @@ jobs:
                 apt-get install -y python${{matrix.python-version }} python${{matrix.python-version }}-venv python${{matrix.python-version }}-pip python${{matrix.python-version }}-apt
                 update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{matrix.python-version }} 1
                 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s --default-host armv7-unknown-linux-gnueabi --default-toolchain armv7-unknown-linux-gnueabi -t armv7-unknown-linux-gnueabi
-                source $HOME/.cargo/env
                 whereis rustc
                 echo "Done building container"
                 ;;
@@ -67,7 +66,6 @@ jobs:
 
           # Produce a binary artifact and place it in the mounted volume
           run: |
-            source $HOME/.cargo/env
             rustc --version
             cargo --version
             python3 -m pip download cryptography --wheel-dir /artifacts
