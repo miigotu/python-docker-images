@@ -24,24 +24,28 @@ jobs:
           override: true
       - name: Install cross
         run: cargo install cross
-      - name: Update environment
-        run: |
+      - run: |
           python -m pip install --upgrade setuptools pip
           python -m pip install --upgrade setuptools-rust wheel
-      - name: Download source and build this arch
-        run: |
           python -m pip download --no-binary :all: --no-deps cryptography
           tar -xf cryptography*.tar.gz
           mv cryptography*/ cryptography_source
           cd cryptography_source
           python setup.py bdist_wheel
           python setup.py bdist_wheel --py-limited-api=cp36
+          ls -ls dist/
       - name: Build wheel using cross
         shell: bash
         env:
           CARGO: cross
           CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf
         run: |
+          python -m pip install --upgrade setuptools pip
+          python -m pip install --upgrade setuptools-rust wheel
+          python -m pip download --no-binary :all: --no-deps cryptography
+          tar -xf cryptography*.tar.gz
+          mv cryptography*/ cryptography_source
+          cd cryptography_source
           python setup.py bdist_wheel --plat-name manylinux2014_arm_v7
           ls -la dist/
 #      - uses: uraimo/run-on-arch-action@v2.0.5
