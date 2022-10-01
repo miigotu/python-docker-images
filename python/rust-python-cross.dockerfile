@@ -19,7 +19,7 @@ ENV VENV_PATH=/opt/venv
 ENV PATH="$VENV_PATH/bin:$PATH"
 
 # Install compiler and dependencies
-RUN apt-get update -yq && apt-get install -yq build-essential libffi-dev libssl-dev libncurses5-dev && \
+RUN apt-get update -yq && apt-get install -yq build-essential libffi-dev libssl-dev libncurses5-dev \
     zlib1g-dev libgdbm-dev libnss3-dev libreadline-dev libsqlite3-dev wget libbz2-dev && \
     apt-get upgreade -yq && apt-get clean -yq && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
 
