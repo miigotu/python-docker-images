@@ -1,4 +1,4 @@
-name: Python - docker build and push images to dockerhub
+name: Try Rust cross
 
 on:
   push:
