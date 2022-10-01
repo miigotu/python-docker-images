@@ -1,5 +1,6 @@
 FROM --platform=$TARGETPLATFORM rust:bullseye as prebuilder
 ARG PYVER
+ENV PYVER=$PYVER
 
 RUN echo "Building python${PYVER}-cryptography"
 
@@ -24,8 +25,8 @@ RUN apt-get update -yq && apt-get install -yq build-essential libffi-dev libssl-
     apt-get upgrade -yq && apt-get clean -yq && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
 
 # Build python
-RUN bash -c V=$(curl https://www.python.org/ftp/python/ -s | grep "href=\"${PYVER}" | sed 's/.*">//g; s/\/<.*//g' | sort) && \
-    PYTHON_VERSION=${V##*$'\n'} && echo "Latest version of ${PYVER} is ${PYTHON_VERSION}" && \
+RUN V=$(curl https://www.python.org/ftp/python/ -s | grep "href=\"${PYVER}" | sed -s 's/.*">//g; s/\/<.*//g' | sort -r) && \
+    PYTHON_VERSION=$(echo $V | awk '{ print $1 }') && echo "Latest version of ${PYVER} is ${PYTHON_VERSION}" && \
     wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
     tar -xvf Python-${PYTHON_VERSION}.tgz && cd Python-${PYTHON_VERSION} &&  \
     ./configure --enable-optimizations && make -j $(nproc) && make install && cd .. && \
