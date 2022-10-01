@@ -21,7 +21,7 @@ ENV PATH="$VENV_PATH/bin:$PATH"
 # Install compiler and dependencies
 RUN apt-get update -yq && apt-get install -yq build-essential libffi-dev libssl-dev libncurses5-dev \
     zlib1g-dev libgdbm-dev libnss3-dev libreadline-dev libsqlite3-dev wget libbz2-dev && \
-    apt-get upgreade -yq && apt-get clean -yq && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
+    apt-get upgrade -yq && apt-get clean -yq && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
 
 # Build python
 RUN V=$(curl https://www.python.org/ftp/python/ -s | grep "href=\"$PYVER" | sed 's/.*">//g; s/\/<.*//g' | sort) && \
