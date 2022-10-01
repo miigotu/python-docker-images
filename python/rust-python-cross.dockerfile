@@ -24,12 +24,12 @@ RUN apt-get update -yq && apt-get install -yq build-essential libffi-dev libssl-
     apt-get upgrade -yq && apt-get clean -yq && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
 
 # Build python
-RUN V=$(curl https://www.python.org/ftp/python/ -s | grep "href=\"$PYVER" | sed 's/.*">//g; s/\/<.*//g' | sort) && \
-    PYTHON_VERSION=${V##*$'\n'} && echo "Latest version of $PYVER is $PYTHON_VERSION" && \
-    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz && \
-    tar -xvf Python-$PYTHON_VERSION.tgz && cd Python-$PYTHON_VERSION &&  \
+RUN bash -c V=$(curl https://www.python.org/ftp/python/ -s | grep "href=\"${PYVER}" | sed 's/.*">//g; s/\/<.*//g' | sort) && \
+    PYTHON_VERSION=${V##*$'\n'} && echo "Latest version of ${PYVER} is ${PYTHON_VERSION}" && \
+    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
+    tar -xvf Python-${PYTHON_VERSION}.tgz && cd Python-${PYTHON_VERSION} &&  \
     ./configure --enable-optimizations && make -j $(nproc) && make install && cd .. && \
-    rm -rf Python-$PYTHON_VERSION.tgz Python-$PYTHON_VERSION && which python$PYVER && python$PYVER --version
+    rm -rf Python-${PYTHON_VERSION}.tgz Python-${PYTHON_VERSION} && which python$PYVER && python$PYVER --version
 
 # Setup venv
 RUN which python$PYVER && python$PYVER --version && which python3 && python3 --version
