@@ -18,12 +18,21 @@ ENV VENV_PATH=/opt/venv
 
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-RUN apt-get update -yq && apt-get install -y software-properties-common build-essential libffi-dev libssl-dev bash  zlib1g-dev && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && apt-get install -y python$PYVER python$PYVER-venv python$PYVER-pip python$PYVER-apt && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYVER 1 \
+# Install compiler and dependencies
+RUN apt-get update -yq && apt-get install -yq build-essential libffi-dev libssl-dev libncurses5-dev && \
+    zlib1g-dev libgdbm-dev libnss3-dev libreadline-dev libsqlite3-dev wget libbz2-dev && \
+    apt-get upgreade -yq && apt-get clean -yq && rm -rf /var/lib/apt/lists/* && rm -rf /usr/share/man/
+
+# Build python
+RUN V=$(curl https://www.python.org/ftp/python/ -s | grep "href=\"$PYVER" | sed 's/.*">//g; s/\/<.*//g' | sort) && \
+    PYTHON_VERSION=${V##*$'\n'} && echo "Latest version of $PYVER is $PYTHON_VERSION" && \
+    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz && \
+    tar -xvf Python-$PYTHON_VERSION.tgz && cd Python-$PYTHON_VERSION &&  \
+    ./configure --enable-optimizations && make -j $(nproc) && make install && cd .. && \
+    rm -rf Python-$PYTHON_VERSION.tgz Python-$PYTHON_VERSION && which python$PYVER && python$PYVER --version
 
 # Setup venv
+RUN which python$PYVER && python$PYVER --version && which python3 && python3 --version
 RUN python3 -m venv $VENV_PATH --upgrade
 RUN python3 -m pip install --upgrade setuptools pip
 RUN python3 -m pip install --upgrade setuptools-rust wheel
