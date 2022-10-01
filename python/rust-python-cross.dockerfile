@@ -18,8 +18,7 @@ ENV VENV_PATH=/opt/venv
 
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-RUN apt-get update -yq && apt-get install -y software-properties-common build-essential extra-runtime-dependencies && \
-    curl bash libffi-dev libssl-dev zlib1g-dev && \
+RUN apt-get update -yq && apt-get install -y software-properties-common build-essential libffi-dev libssl-dev bash  zlib1g-dev && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && apt-get install -y python$PYVER python$PYVER-venv python$PYVER-pip python$PYVER-apt && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYVER 1 \
@@ -29,7 +28,7 @@ RUN python3 -m venv $VENV_PATH --upgrade
 RUN python3 -m pip install --upgrade setuptools pip
 RUN python3 -m pip install --upgrade setuptools-rust wheel
 
-FROM --platform=$TARGETPLATFORM miigotu/rust-python-builder as builder
+FROM --platform=$TARGETPLATFORM prebuilder as builder
 
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=off
@@ -39,7 +38,8 @@ ENV PIP_DEFAULT_TIMEOUT=100
 ENV VENV_PATH=/opt/venv
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-RUN pip wheel cryptography --wheel-dir /wheels
+ARG PACKAGES="pycparser cffi greenlet lxml MarkupSafe msgpack SQLAlchemy tornado wrapt cryptography PyNaCl"
+RUN pip install pycparser && pip wheel $PACKAGES --require-virtualenv --wheel-dir /wheels
 
 
 FROM scratch as export-wheels
