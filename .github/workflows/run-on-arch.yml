@@ -58,6 +58,7 @@ jobs:
                 apt-get update
                 apt-get install -y python${{matrix.python-version }} python${{matrix.python-version }}-venv python${{matrix.python-version }}-pip python${{matrix.python-version }}-apt
                 update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{matrix.python-version }} 1
+                whereis rustc
                 echo "Done building container"
                 ;;
             esac
