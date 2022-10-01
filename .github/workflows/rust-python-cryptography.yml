@@ -1,9 +1,9 @@
-name: Cryptography
+name: Cryptography using rust base image
 
 on:
   push:
     branches:
-      - 'main'
+      - '*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -11,7 +11,6 @@ concurrency:
 
 env:
   DOCKER_BUILDKIT: '1'
-  # TARGET_PLATFORMS: "linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x"
   TARGET_PLATFORMS: "linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x"
   PUSH: true
 
@@ -21,7 +20,8 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-rc"]
+#        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-rc"]
+        python-version: ["3.10"]
         slim: ["-slim", ""]
     continue-on-error: true
     runs-on: ubuntu-22.04
@@ -32,27 +32,25 @@ jobs:
         uses: docker/setup-buildx-action@v2
         with:
           buildkitd-flags: --debug
-          config-inline: |
-                      [worker.oci]
-                        max-parallelism = 1
-      - name: Build python-cryptography using python${{ matrix.python-version }}${{ matrix.slim }}
+          config: .github/buildkitd.toml
+      - name: Build python-cryptography using rust-python${{ matrix.python-version }}
         uses: docker/build-push-action@v3
         with:
-          file: python/python-cryptography.dockerfile
+          file: python/rust-python-cryptography.dockerfile
           platforms: ${{ env.TARGET_PLATFORMS }}
           push: false
           target: export-wheels
           tags: |
-            python${{ matrix.python-version }}${{ matrix.slim }}-cryptography
-          build-args: PYVER=${{ matrix.python-version }}${{ matrix.slim }}
+            rust-python${{ matrix.python-version }}-cryptography
+          build-args: PYVER=${{ matrix.python-version }}
           outputs: type=local,dest=/tmp/cryptography-wheels
           ulimit: nofile=262144:262144
-          # outputs: type=docker,dest=/tmp/python${{ matrix.python-version }}${{ matrix.slim }}-cryptography.tar
+          # outputs: type=docker,dest=/tmp/python${{ matrix.python-version }}-cryptography.tar
       - name: List wheels directory
         run: |
           ls -R /tmp/cryptography-wheels
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.python-version }}${{ matrix.slim }}-cryptography
+          name: rust-python-${{ matrix.python-version }}-cryptography
           path: /tmp/cryptography-wheels
