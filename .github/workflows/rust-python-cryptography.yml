@@ -28,11 +28,15 @@ jobs:
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
+      - name: Create builtkitd config override
+        run: |
+          echo "[worker.oci]" > /tmp/buildkitd.toml
+          echo "  max-parallelism = 1" >> /tmp/buildkitd.toml
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
           buildkitd-flags: --debug
-          config: .github/buildkitd.toml
+          config: /tmp/buildkitd.toml
       - name: Build python-cryptography using rust-python${{ matrix.python-version }}
         uses: docker/build-push-action@v3
         with:
