@@ -48,8 +48,8 @@ ENV PIP_DEFAULT_TIMEOUT=100
 ENV VENV_PATH=/opt/venv
 ENV PATH="$VENV_PATH/bin:$PATH"
 
-RUN pip install pycparser && pip wheel pycparser cffi greenlet lxml MarkupSafe msgpack SQLAlchemy \
-    tornado wrapt cryptography PyNaCl --require-virtualenv --wheel-dir /wheels
+ARG PACKAGES="pycparser cffi greenlet lxml MarkupSafe msgpack SQLAlchemy tornado wrapt cryptography PyNaCl"
+RUN RUN --mount=type=tmpfs,target=/root/.cargo pip install pycparser && pip wheel $PACKAGES --require-virtualenv --wheel-dir /wheels
 
 
 FROM scratch as export-wheels
