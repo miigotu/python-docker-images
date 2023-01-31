@@ -46,7 +46,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
       - name: Build cross wheels for ${{ matrix.platform }} using rust-python${{ matrix.python-version }}
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           file: python/rust-python-cross.dockerfile
 #          platforms: ${{ env.TARGET_PLATFORMS }}
